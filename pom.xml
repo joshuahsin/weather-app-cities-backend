@@ -9,7 +9,7 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.app</groupId>
-	<artifactId>SocialMediaApp</artifactId>
+	<artifactId>WeatherCities</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>Weather Cities</name>
 	<description>Weather Cities API for weather App</description>
