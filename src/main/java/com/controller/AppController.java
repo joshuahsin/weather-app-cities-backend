@@ -23,6 +23,11 @@ import com.entity.City;
 @RequestMapping("/weatherCities")
 @CrossOrigin(origins = "http://localhost:3000")
 public class AppController {
+	@GetMapping("/health")
+	public String health() {
+		return "healthy";
+	}
+	
 	@Autowired
 	private CityDAO cityDAO;
 	
