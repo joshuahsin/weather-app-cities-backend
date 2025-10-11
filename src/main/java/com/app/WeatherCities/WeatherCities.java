@@ -7,9 +7,9 @@ import org.springframework.context.annotation.ComponentScan;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 
 @SpringBootApplication
-@EnableJpaRepositories("com")
-@EntityScan("com")
-@ComponentScan("com")
+@EnableJpaRepositories(basePackages = "com.repository")
+@EntityScan(basePackages = "com.entity")
+@ComponentScan(basePackages = "com")
 public class WeatherCities {
 
 	public static void main(String[] args) {

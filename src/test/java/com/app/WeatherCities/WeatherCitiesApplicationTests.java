@@ -1,10 +1,10 @@
-package com.app.SocialMediaApp;
+package com.app.WeatherCities;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class SocialMediaAppApplicationTests {
+class WeatherCitiesApplicationTests {
 
 	@Test
 	void contextLoads() {
