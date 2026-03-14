@@ -61,10 +61,10 @@ public class CityDaoImpl implements CityDAO{
 	}
 
 	@Override
-	public List<City> deleteCityByID(int id) {
-		if(cityRepo.findById(id).isPresent()) {
+	public boolean deleteCityByID(int id) {
+		if (cityRepo.findById(id).isPresent()) {
 			cityRepo.deleteById(id);
-			return cityRepo.findAll();
+			return true;
 		}
 		throw new CityNotFoundException(id);
 	}

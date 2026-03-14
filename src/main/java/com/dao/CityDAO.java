@@ -10,6 +10,6 @@ public interface CityDAO {
 	public City addCity(City city);
 	public List<City> addCityList(List<City> city_list);
 	public City updateCity(int id, City city);
-	public List<City> deleteCityByID(int id);
+	public boolean deleteCityByID(int id);
 	public boolean deleteCityByCityState(String city, String state);
 }

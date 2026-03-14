@@ -66,7 +66,7 @@ public class AppController {
 	}
 	
 	@DeleteMapping("/deleteCity/{id}")
-	public List<City> deleteCity(@PathVariable int id) {
+	public boolean deleteCity(@PathVariable int id) {
 		return cityDAO.deleteCityByID(id);
 	}
 	
