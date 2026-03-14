@@ -2,7 +2,6 @@ package com.app.WeatherCities;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -13,10 +12,13 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import com.entity.Role;
 
 import com.entity.AllCity;
 import com.entity.City;
+import com.entity.User;
 import com.exception.CityNotFoundException;
+import com.exception.UserNotFoundException;
 import com.repository.AllCityRepository;
 import com.repository.CityRepository;
 import com.repository.UserRepository;
@@ -241,5 +243,252 @@ public class WeatherCitiesServiceTests {
         when(cityRepository.deleteByCityAndState("New York", "NY")).thenReturn(1L);
         boolean deleted = cityService.deleteCityByCityState("New York", "NY");
         assertThat(deleted).isTrue();
+    }
+
+
+    @Test
+    void testDeleteCityByCityStateNotFound() {
+        when(cityRepository.deleteByCityAndState("New York", "NY")).thenReturn(0L);
+        boolean deleted = cityService.deleteCityByCityState("New York", "NY");
+        assertThat(deleted).isFalse();
+    }
+
+
+    @Test
+    void testFindAllUsers() {
+        User user1 = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        user1.setId(1L);
+        User user2 = new User("Jane Doe", "jane.doe@example.com", "password", Role.USER);
+        user2.setId(2L);
+        when(userRepository.findAll()).thenReturn(List.of(user1, user2));
+        List<User> users = userService.getAllUsers();
+        assertThat(users).isNotEmpty();
+        assertThat(users.size()).isEqualTo(2);
+        assertThat(users.get(0).getUsername()).isEqualTo("John Doe");
+        assertThat(users.get(0).getEmail()).isEqualTo("john.doe@example.com");
+        assertThat(users.get(0).getRole()).isEqualTo(Role.USER);
+        assertThat(users.get(1).getUsername()).isEqualTo("Jane Doe");
+        assertThat(users.get(1).getEmail()).isEqualTo("jane.doe@example.com");
+        assertThat(users.get(1).getRole()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    void testFindUserById() {
+        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        user.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        User foundUser = userService.getUserById(1L);
+        assertThat(foundUser).isNotNull();
+        assertThat(foundUser.getUsername()).isEqualTo("John Doe");
+        assertThat(foundUser.getEmail()).isEqualTo("john.doe@example.com");
+        assertThat(foundUser.getRole()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    void testFindUserByIdNotFound() {
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> userService.getUserById(1L)).isInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    void testFindUserByUsername() {
+        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        user.setId(1L);
+        when(userRepository.findByUsername("John Doe")).thenReturn(Optional.of(user));
+        User foundUser = userService.getUserByUsername("John Doe");
+        assertThat(foundUser).isNotNull();
+        assertThat(foundUser.getUsername()).isEqualTo("John Doe");
+        assertThat(foundUser.getEmail()).isEqualTo("john.doe@example.com");
+        assertThat(foundUser.getRole()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    void testFindUserByUsernameNotFound() {
+        when(userRepository.findByUsername("John Doe")).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> userService.getUserByUsername("John Doe")).isInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    void testFindUserByEmail() {
+        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        user.setId(1L);
+        when(userRepository.findByEmail("john.doe@example.com")).thenReturn(Optional.of(user));
+        User foundUser = userService.getUserByEmail("john.doe@example.com");
+        assertThat(foundUser).isNotNull();
+        assertThat(foundUser.getUsername()).isEqualTo("John Doe");
+        assertThat(foundUser.getEmail()).isEqualTo("john.doe@example.com");
+        assertThat(foundUser.getRole()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    void testFindUserByEmailNotFound() {
+        when(userRepository.findByEmail("john.doe@example.com")).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> userService.getUserByEmail("john.doe@example.com")).isInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    void testFindUsersByRole() {
+        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        user.setId(1L);
+        when(userRepository.findByRole(Role.USER)).thenReturn(List.of(user));
+        List<User> users = userService.getUsersByRole(Role.USER);
+        assertThat(users).isNotEmpty();
+        assertThat(users.size()).isEqualTo(1);
+        assertThat(users.get(0).getUsername()).isEqualTo("John Doe");
+        assertThat(users.get(0).getEmail()).isEqualTo("john.doe@example.com");
+        assertThat(users.get(0).getRole()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    void testFindUsersByRoleNotFound() {
+        when(userRepository.findByRole(Role.USER)).thenReturn(List.of());
+        List<User> users = userService.getUsersByRole(Role.USER);
+        assertThat(users).isEmpty();
+    }
+
+    @Test
+    void testUserExistsByUsername() {
+        when(userRepository.existsByUsername("John Doe")).thenReturn(true);
+        boolean exists = userService.userExistsByUsername("John Doe");
+        assertThat(exists).isTrue();
+    }
+
+    @Test
+    void testUserExistsByUsernameNotFound() {
+        when(userRepository.existsByUsername("John Doe")).thenReturn(false);
+        boolean exists = userService.userExistsByUsername("John Doe");
+        assertThat(exists).isFalse();
+    }
+
+    @Test
+    void testUserExistsByEmail() {
+        when(userRepository.existsByEmail("john.doe@example.com")).thenReturn(true);
+        boolean exists = userService.userExistsByEmail("john.doe@example.com");
+        assertThat(exists).isTrue();
+    }
+
+    @Test
+    void testUserExistsByEmailNotFound() {
+        when(userRepository.existsByEmail("john.doe@example.com")).thenReturn(false);
+        boolean exists = userService.userExistsByEmail("john.doe@example.com");
+        assertThat(exists).isFalse();
+    }
+
+    @Test
+    void testUserExistsByUsernameAndPassword() {
+        when(userRepository.existsByUsernameAndPassword("John Doe", "password")).thenReturn(true);
+        boolean exists = userService.userExistsByUsernameAndPassword("John Doe", "password");
+        assertThat(exists).isTrue();
+    }
+
+    @Test
+    void testUserExistsByUsernameAndPasswordNotFound() {
+        when(userRepository.existsByUsernameAndPassword("John Doe", "password")).thenReturn(false);
+        boolean exists = userService.userExistsByUsernameAndPassword("John Doe", "password");
+        assertThat(exists).isFalse();
+    }
+
+    @Test
+    void testAddUser() {
+        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        when(userRepository.save(user)).thenReturn(user);
+        User addedUser = userService.addUser(user);
+        assertThat(addedUser).isNotNull();
+        assertThat(addedUser.getUsername()).isEqualTo("John Doe");
+        assertThat(addedUser.getEmail()).isEqualTo("john.doe@example.com");
+        assertThat(addedUser.getRole()).isEqualTo(Role.USER);
+    }
+
+    @Test
+    void testAddUserList() {
+        List<User> users = List.of(new User("John Doe", "john.doe@example.com", "password", Role.USER),
+                                    new User("Jane Doe", "jane.doe@example.com", "password", Role.USER));
+        when(userRepository.saveAll(users)).thenReturn(users);
+        List<User> addedUsers = userService.addUserList(users);
+        assertThat(addedUsers).isNotNull();
+        assertThat(addedUsers.size()).isEqualTo(2);
+    }
+
+    @Test
+    void testUpdateUser() {
+        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        user.setId(1L);
+        User updatedUser = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        updatedUser.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.save(updatedUser)).thenReturn(updatedUser);
+        User updatedUserReturn = userService.updateUser(1L, updatedUser);
+    }
+
+    @Test
+    void testUpdateUserNotFound() {
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> userService.updateUser(1L, new User("John Doe", "john.doe@example.com", "password", Role.USER))).isInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    void testDeleteUserById() {
+        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        user.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(userRepository.findAll()).thenReturn(List.of());
+        List<User> deletedUsers = userService.deleteUserById(1L);
+        assertThat(deletedUsers).isEmpty();
+    }
+
+    @Test
+    void testDeleteUserByIdNotFound() {
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> userService.deleteUserById(1L)).isInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    void testDeleteUserByUsername() {
+        when(userRepository.deleteByUsername("John Doe")).thenReturn(1L);
+        boolean deleted = userService.deleteUserByUsername("John Doe");
+        assertThat(deleted).isTrue();
+    }
+
+    @Test
+    void testDeleteUserByUsernameNotFound() {
+        when(userRepository.deleteByUsername("John Doe")).thenReturn(0L);
+        boolean deleted = userService.deleteUserByUsername("John Doe");
+        assertThat(deleted).isFalse();
+    }
+
+    @Test
+    void testUpdateUserPassword() {
+        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        user.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        user.setPassword("newpassword");
+        when(userRepository.save(user)).thenReturn(user);
+        User updatedUser = userService.updateUserPassword(1L, "newpassword");
+        assertThat(updatedUser).isNotNull();
+        assertThat(updatedUser.getPassword()).isEqualTo("newpassword");
+    }
+
+    @Test
+    void testUpdateUserPasswordNotFound() {
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> userService.updateUserPassword(1L, "newpassword")).isInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    void testUpdateUserPasswordByUsername() {
+        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        user.setId(1L);
+        when(userRepository.findByUsername("John Doe")).thenReturn(Optional.of(user));
+        user.setPassword("newpassword");
+        when(userRepository.save(user)).thenReturn(user);
+        User updatedUser = userService.updateUserPasswordByUsername("John Doe", "newpassword");
+        assertThat(updatedUser).isNotNull();
+        assertThat(updatedUser.getPassword()).isEqualTo("newpassword");
+    }
+
+    @Test
+    void testUpdateUserPasswordByUsernameNotFound() {
+        when(userRepository.findByUsername("John Doe")).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> userService.updateUserPasswordByUsername("John Doe", "newpassword")).isInstanceOf(UserNotFoundException.class);
     }
 }
