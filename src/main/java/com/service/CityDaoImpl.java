@@ -12,10 +12,10 @@ import com.exception.CityNotFoundException;
 import com.repository.CityRepository;
 
 @Service
-public class CityDaoImpl implements CityDAO{
+public class CityDaoImpl implements CityDAO {
 	@Autowired
 	private CityRepository cityRepo;
-	
+
 	@Override
 	public List<City> getAllCities() {
 		return cityRepo.findAll();
@@ -24,37 +24,30 @@ public class CityDaoImpl implements CityDAO{
 	@Override
 	public City getCitybyID(int id) {
 		Optional<City> city = cityRepo.findById(id);
-		if(city.isPresent()) {
+		if (city.isPresent()) {
 			return city.get();
 		}
 		throw new CityNotFoundException(id);
 	}
-	
+
 	@Override
 	public boolean getCitybyCityState(String city, String state) {
-		List<City> city_lst = cityRepo.findByCityAndState(city, state);
-		if(city_lst.size() > 0) {
-			return true;
-		}
-		else {
-			return false;
-		}
+		return !cityRepo.findByCityAndState(city, state).isEmpty();
 	}
 
 	@Override
 	public City addCity(City city) {
 		return cityRepo.save(city);
 	}
-	
+
 	@Override
 	public List<City> addCityList(List<City> city_list) {
-		// TODO Auto-generated method stub
 		return cityRepo.saveAll(city_list);
 	}
 
 	@Override
 	public City updateCity(int id, City city) {
-		if(cityRepo.findById(id).isPresent()) {
+		if (cityRepo.findById(id).isPresent()) {
 			return cityRepo.save(city);
 		}
 		throw new CityNotFoundException(id);
@@ -71,12 +64,6 @@ public class CityDaoImpl implements CityDAO{
 
 	@Override
 	public boolean deleteCityByCityState(String city, String state) {
-		long result = cityRepo.deleteByCityAndState(city, state);
-		if(result == 0) {
-			return false;
-		}
-		else {
-			return true;
-		}
+		return cityRepo.deleteByCityAndState(city, state) > 0;
 	}
 }

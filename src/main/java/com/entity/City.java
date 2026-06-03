@@ -1,15 +1,13 @@
 package com.entity;
+
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
 
 @Entity
-@Table(name = "selected_cities")
+@Table(name = "cities")
 public class City {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -17,14 +15,14 @@ public class City {
 	private String city;
 	private String state;
 	private String country;
-	
+
 	public City() {
 		super();
 	}
 
-	public City(int city_id, String city, String state, String country) {
+	public City(int id, String city, String state, String country) {
 		super();
-		this.id = city_id;
+		this.id = id;
 		this.city = city;
 		this.state = state;
 		this.country = country;
@@ -64,7 +62,6 @@ public class City {
 
 	@Override
 	public String toString() {
-		return "City [id=" + id + ", city=" + city + ", state=" + state
-				+ ", city_country=" + country + "]";
+		return "City [id=" + id + ", city=" + city + ", state=" + state + ", country=" + country + "]";
 	}
 }

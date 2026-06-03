@@ -8,14 +8,14 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.mail.javamail.JavaMailSender;
 
-import com.entity.AllCity;
 import com.entity.City;
 import com.entity.Role;
+import com.entity.SavedCity;
 import com.entity.User;
 import com.exception.CityNotFoundException;
 import com.exception.UserNotFoundException;
-import com.repository.AllCityRepository;
 import com.repository.CityRepository;
+import com.repository.SavedCityRepository;
 import com.repository.UserRepository;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -27,80 +27,15 @@ class WeatherCitiesRepoTests {
 	private JavaMailSender mailSender;
 
 	@Autowired
-	private AllCityRepository allCityRepository;
+	private CityRepository cityRepository;
 
 	@Autowired
-	private CityRepository cityRepository;
+	private SavedCityRepository savedCityRepository;
 
 	@Autowired
 	private UserRepository userRepository;
 
-	@Test
-	void testFindAllCityByID() {
-		AllCity allCity = new AllCity();
-		allCity.setCity("New York");
-		allCity.setState("NY");
-		allCity.setCountry("USA");
-		allCityRepository.save(allCity);
-		int id = allCity.getId();
-		assertThat(allCityRepository.findById(id).orElseThrow(() -> new CityNotFoundException(id)).getCity()).isEqualTo("New York");
-		assertThat(allCityRepository.findById(id).orElseThrow(() -> new CityNotFoundException(id)).getState()).isEqualTo("NY");
-		assertThat(allCityRepository.findById(id).orElseThrow(() -> new CityNotFoundException(id)).getCountry()).isEqualTo("USA");
-	}
-
-	@Test
-	void testFindAllAllCities() {
-		AllCity allCity = new AllCity();
-		allCity.setCity("New York");
-		allCity.setState("NY");
-		allCity.setCountry("USA");
-		allCityRepository.save(allCity);
-		List<AllCity> allCities = allCityRepository.findAll();
-		assertThat(allCities).isNotEmpty();
-	}
-
-	@Test
-	void testAddAllCity() {
-		AllCity allCity = new AllCity();
-		allCity.setCity("New York");
-		allCity.setState("NY");
-		allCity.setCountry("USA");
-		allCityRepository.save(allCity);
-		assertThat(allCityRepository.findById(allCity.getId())).isPresent();
-	}
-
-	@Test
-	void testUpdateAllCity() {
-		AllCity allCity = new AllCity();
-		allCity.setCity("New York");
-		allCity.setState("NY");
-		allCity.setCountry("USA");
-		allCity = allCityRepository.save(allCity);
-		int id = allCity.getId();
-
-		assertThat(allCityRepository.findById(id).orElseThrow(() -> new CityNotFoundException(id)).getCity()).isEqualTo("New York");
-		assertThat(allCityRepository.findById(id).orElseThrow(() -> new CityNotFoundException(id)).getState()).isEqualTo("NY");
-
-		allCity.setCity("Portland");
-		allCity.setState("OR");
-		allCityRepository.save(allCity);
-
-		assertThat(allCityRepository.findById(id).orElseThrow(() -> new CityNotFoundException(id)).getCity()).isEqualTo("Portland");
-		assertThat(allCityRepository.findById(id).orElseThrow(() -> new CityNotFoundException(id)).getState()).isEqualTo("OR");
-	}
-
-	@Test
-	void testDeleteAllCity() {
-		AllCity allCity = new AllCity();
-		allCity.setCity("New York");
-		allCity.setState("NY");
-		allCity.setCountry("USA");
-		allCityRepository.save(allCity);
-		int id = allCity.getId();
-		allCityRepository.deleteById(id);
-		assertThat(allCityRepository.findById(id)).isNotPresent();
-	}
-
+	// --- City (catalog) tests ---
 
 	@Test
 	void testFindCityByID() {
@@ -142,16 +77,16 @@ class WeatherCitiesRepoTests {
 		city.setCity("New York");
 		city.setState("NY");
 		city.setCountry("USA");
-		cityRepository.save(city);
-		assertThat(cityRepository.findById(city.getId()).orElseThrow(() -> new CityNotFoundException(city.getId())).getCity()).isEqualTo("New York");
-		assertThat(cityRepository.findById(city.getId()).orElseThrow(() -> new CityNotFoundException(city.getId())).getState()).isEqualTo("NY");
-		assertThat(cityRepository.findById(city.getId()).orElseThrow(() -> new CityNotFoundException(city.getId())).getCountry()).isEqualTo("USA");
-
+		city = cityRepository.save(city);
 		int id = city.getId();
+
+		assertThat(cityRepository.findById(id).orElseThrow(() -> new CityNotFoundException(id)).getCity()).isEqualTo("New York");
+		assertThat(cityRepository.findById(id).orElseThrow(() -> new CityNotFoundException(id)).getState()).isEqualTo("NY");
 
 		city.setCity("Portland");
 		city.setState("OR");
 		cityRepository.save(city);
+
 		assertThat(cityRepository.findById(id).orElseThrow(() -> new CityNotFoundException(id)).getCity()).isEqualTo("Portland");
 		assertThat(cityRepository.findById(id).orElseThrow(() -> new CityNotFoundException(id)).getState()).isEqualTo("OR");
 	}
@@ -189,6 +124,72 @@ class WeatherCitiesRepoTests {
 		assertThat(cityRepository.findByCityAndState("New York", "NY")).isEmpty();
 	}
 
+	// --- SavedCity (join table) tests ---
+
+	@Test
+	void testAddSavedCity() {
+		User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+		userRepository.save(user);
+		City city = new City();
+		city.setCity("New York");
+		city.setState("NY");
+		city.setCountry("USA");
+		cityRepository.save(city);
+
+		SavedCity savedCity = new SavedCity(user, city);
+		savedCityRepository.save(savedCity);
+		assertThat(savedCityRepository.findById(savedCity.getId())).isPresent();
+	}
+
+	@Test
+	void testFindSavedCitiesByUserId() {
+		User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+		userRepository.save(user);
+		City city = new City();
+		city.setCity("New York");
+		city.setState("NY");
+		city.setCountry("USA");
+		cityRepository.save(city);
+
+		savedCityRepository.save(new SavedCity(user, city));
+		List<SavedCity> results = savedCityRepository.findByUser_Id(user.getId());
+		assertThat(results).isNotEmpty();
+		assertThat(results.get(0).getCity().getCity()).isEqualTo("New York");
+	}
+
+	@Test
+	void testDeleteSavedCity() {
+		User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+		userRepository.save(user);
+		City city = new City();
+		city.setCity("New York");
+		city.setState("NY");
+		city.setCountry("USA");
+		cityRepository.save(city);
+
+		SavedCity savedCity = savedCityRepository.save(new SavedCity(user, city));
+		int id = savedCity.getId();
+		savedCityRepository.deleteById(id);
+		assertThat(savedCityRepository.findById(id)).isNotPresent();
+	}
+
+	@Test
+	void testDeleteSavedCityByUserAndCity() {
+		User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+		userRepository.save(user);
+		City city = new City();
+		city.setCity("New York");
+		city.setState("NY");
+		city.setCountry("USA");
+		cityRepository.save(city);
+
+		savedCityRepository.save(new SavedCity(user, city));
+		assertThat(savedCityRepository.deleteByUser_IdAndCity_Id(user.getId(), city.getId())).isEqualTo(1);
+		assertThat(savedCityRepository.findByUser_Id(user.getId())).isEmpty();
+	}
+
+	// --- User tests ---
+
 	@Test
 	void testFindUserByID() {
 		User user = new User();
@@ -204,7 +205,7 @@ class WeatherCitiesRepoTests {
 		assertThat(userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id)).getPassword()).isEqualTo("password");
 		assertThat(userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id)).getRole()).isEqualTo(Role.USER);
 	}
-	
+
 	@Test
 	void testFindAllUsers() {
 		User user = new User();
@@ -245,7 +246,6 @@ class WeatherCitiesRepoTests {
 
 		user.setUsername("Jane Doe");
 		user.setEmail("jane.doe@example.com");
-
 		userRepository.save(user);
 		assertThat(userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id)).getUsername()).isEqualTo("Jane Doe");
 		assertThat(userRepository.findById(id).orElseThrow(() -> new UserNotFoundException(id)).getEmail()).isEqualTo("jane.doe@example.com");

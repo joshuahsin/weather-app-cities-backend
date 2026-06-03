@@ -2,6 +2,7 @@ package com.app.WeatherCities;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -12,28 +13,22 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import com.entity.Role;
 
-import com.entity.AllCity;
 import com.entity.City;
+import com.entity.Role;
+import com.entity.SavedCity;
 import com.entity.User;
 import com.exception.CityNotFoundException;
 import com.exception.UserNotFoundException;
-import com.repository.AllCityRepository;
 import com.repository.CityRepository;
+import com.repository.SavedCityRepository;
 import com.repository.UserRepository;
-import com.service.AllCityDaoImpl;
 import com.service.CityDaoImpl;
+import com.service.SavedCityDaoImpl;
 import com.service.UserDaoImpl;
 
 @ExtendWith(MockitoExtension.class)
 public class WeatherCitiesServiceTests {
-
-    @Mock
-    private AllCityRepository allCityRepository;
-
-    @InjectMocks
-    private AllCityDaoImpl allCityService;
 
     @Mock
     private CityRepository cityRepository;
@@ -42,115 +37,29 @@ public class WeatherCitiesServiceTests {
     private CityDaoImpl cityService;
 
     @Mock
+    private SavedCityRepository savedCityRepository;
+
+    @InjectMocks
+    private SavedCityDaoImpl savedCityService;
+
+    @Mock
     private UserRepository userRepository;
-    
+
     @InjectMocks
     private UserDaoImpl userService;
 
-    @Test
-    void testFindAllAllCities() {
-        when(allCityRepository.findAll()).thenReturn(List.of(new AllCity(1, "New York", "NY", "USA"),
-                                                    new AllCity(2, "Los Angeles", "CA", "USA")));
-        
-        List<AllCity> allCities = allCityService.getAllCities();
-        assertThat(allCities).isNotEmpty();
-        assertThat(allCities.size()).isEqualTo(2);
-        assertThat(allCities.get(0).getCity()).isEqualTo("New York");
-        assertThat(allCities.get(0).getState()).isEqualTo("NY");
-        assertThat(allCities.get(0).getCountry()).isEqualTo("USA");
-        assertThat(allCities.get(1).getCity()).isEqualTo("Los Angeles");
-        assertThat(allCities.get(1).getState()).isEqualTo("CA");
-        assertThat(allCities.get(1).getCountry()).isEqualTo("USA");
-    }
+    // --- City (catalog) tests ---
 
-    @Test
-    void testFindAllCityById() {
-        when(allCityRepository.findById(1)).thenReturn(Optional.of(new AllCity(1, "New York", "NY", "USA")));
-        AllCity allCity = allCityService.getCitybyID(1);
-        assertThat(allCity).isNotNull();
-        assertThat(allCity.getCity()).isEqualTo("New York");
-        assertThat(allCity.getState()).isEqualTo("NY");
-        assertThat(allCity.getCountry()).isEqualTo("USA");
-    }
-
-    @Test
-    void testFindAllCityByIdNotFound() {
-        when(allCityRepository.findById(1)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> allCityService.getCitybyID(1)).isInstanceOf(CityNotFoundException.class);
-    }
-
-    @Test
-    void testAddAllCity() {
-        AllCity allCity = new AllCity(1, "New York", "NY", "USA");
-        when(allCityRepository.save(allCity)).thenReturn(allCity);
-        AllCity addedCity = allCityService.addCity(allCity);
-        assertThat(addedCity).isNotNull();
-        assertThat(addedCity.getCity()).isEqualTo("New York");
-        assertThat(addedCity.getState()).isEqualTo("NY");
-        assertThat(addedCity.getCountry()).isEqualTo("USA");
-    }
-
-    @Test
-    void testAddAllCityList() {
-        List<AllCity> allCities = List.of(new AllCity(1, "New York", "NY", "USA"),
-                                            new AllCity(2, "Los Angeles", "CA", "USA"));
-        when(allCityRepository.saveAll(allCities)).thenReturn(allCities);
-        List<AllCity> addedCities = allCityService.addCityList(allCities);
-        assertThat(addedCities).isNotNull();
-        assertThat(addedCities.size()).isEqualTo(2);
-        assertThat(addedCities.get(0).getCity()).isEqualTo("New York");
-        assertThat(addedCities.get(0).getState()).isEqualTo("NY");
-        assertThat(addedCities.get(0).getCountry()).isEqualTo("USA");
-        assertThat(addedCities.get(1).getCity()).isEqualTo("Los Angeles");
-        assertThat(addedCities.get(1).getState()).isEqualTo("CA");
-        assertThat(addedCities.get(1).getCountry()).isEqualTo("USA");
-    }
-
-    @Test
-    void testUpdateAllCity() {
-        AllCity allCity = new AllCity(1, "New York", "NY", "USA");
-        AllCity updatedCity = new AllCity(1, "Los Angeles", "CA", "USA");
-        when(allCityRepository.findById(1)).thenReturn(Optional.of(allCity));
-        when(allCityRepository.save(updatedCity)).thenReturn(updatedCity);
-        AllCity updatedCityReturn = allCityService.updateCity(1, updatedCity);
-        assertThat(updatedCityReturn).isNotNull();
-        assertThat(updatedCityReturn.getCity()).isEqualTo("Los Angeles");
-        assertThat(updatedCityReturn.getState()).isEqualTo("CA");
-        assertThat(updatedCityReturn.getCountry()).isEqualTo("USA");
-    }
-
-    @Test
-    void testUpdateAllCityNotFound() {
-        when(allCityRepository.findById(1)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> allCityService.updateCity(1, new AllCity(1, "Los Angeles", "CA", "USA"))).isInstanceOf(CityNotFoundException.class);
-    }
-
-    @Test
-    void testDeleteAllCity() {
-        when(allCityRepository.findById(1)).thenReturn(Optional.of(new AllCity(1, "New York", "NY", "USA")));
-        //when(allCityRepository.deleteById(1)).thenReturn(void);
-        boolean deleted = allCityService.deleteCityByID(1);
-        assertThat(deleted).isTrue();
-    }
-
-    @Test
-    void testDeleteAllCityNotFound() {
-        when(allCityRepository.findById(1)).thenReturn(Optional.empty());
-        assertThatThrownBy(() -> allCityService.deleteCityByID(1)).isInstanceOf(CityNotFoundException.class);
-    }
-
-    
     @Test
     void testFindAllCities() {
         when(cityRepository.findAll()).thenReturn(List.of(new City(1, "New York", "NY", "USA"),
-                                                    new City(2, "Los Angeles", "CA", "USA")));
+                                                          new City(2, "Los Angeles", "CA", "USA")));
         List<City> cities = cityService.getAllCities();
         assertThat(cities).isNotEmpty();
         assertThat(cities.size()).isEqualTo(2);
         assertThat(cities.get(0).getCity()).isEqualTo("New York");
         assertThat(cities.get(0).getState()).isEqualTo("NY");
         assertThat(cities.get(0).getCountry()).isEqualTo("USA");
-
         assertThat(cities.get(1).getCity()).isEqualTo("Los Angeles");
         assertThat(cities.get(1).getState()).isEqualTo("CA");
         assertThat(cities.get(1).getCountry()).isEqualTo("USA");
@@ -175,15 +84,13 @@ public class WeatherCitiesServiceTests {
     @Test
     void testFindCityByCityState() {
         when(cityRepository.findByCityAndState("New York", "NY")).thenReturn(List.of(new City(1, "New York", "NY", "USA")));
-        boolean found = cityService.getCitybyCityState("New York", "NY");
-        assertThat(found).isTrue();
+        assertThat(cityService.getCitybyCityState("New York", "NY")).isTrue();
     }
 
     @Test
     void testFindCityByCityStateNotFound() {
         when(cityRepository.findByCityAndState("New York", "NY")).thenReturn(List.of());
-        boolean found = cityService.getCitybyCityState("New York", "NY");
-        assertThat(found).isFalse();
+        assertThat(cityService.getCitybyCityState("New York", "NY")).isFalse();
     }
 
     @Test
@@ -202,8 +109,7 @@ public class WeatherCitiesServiceTests {
         List<City> cities = List.of(new City(1, "New York", "NY", "USA"),
                                     new City(2, "Los Angeles", "CA", "USA"));
         when(cityRepository.saveAll(cities)).thenReturn(cities);
-        List<City> addedCities = cityService.addCityList(cities);
-        assertThat(addedCities).isNotNull();
+        assertThat(cityService.addCityList(cities)).isNotNull();
     }
 
     @Test
@@ -212,11 +118,11 @@ public class WeatherCitiesServiceTests {
         City updatedCity = new City(1, "Los Angeles", "CA", "USA");
         when(cityRepository.findById(1)).thenReturn(Optional.of(city));
         when(cityRepository.save(updatedCity)).thenReturn(updatedCity);
-        City updatedCityReturn = cityService.updateCity(1, updatedCity);
-        assertThat(updatedCityReturn).isNotNull();
-        assertThat(updatedCityReturn.getCity()).isEqualTo("Los Angeles");
-        assertThat(updatedCityReturn.getState()).isEqualTo("CA");
-        assertThat(updatedCityReturn.getCountry()).isEqualTo("USA");
+        City result = cityService.updateCity(1, updatedCity);
+        assertThat(result).isNotNull();
+        assertThat(result.getCity()).isEqualTo("Los Angeles");
+        assertThat(result.getState()).isEqualTo("CA");
+        assertThat(result.getCountry()).isEqualTo("USA");
     }
 
     @Test
@@ -228,10 +134,9 @@ public class WeatherCitiesServiceTests {
     @Test
     void testDeleteCity() {
         when(cityRepository.findById(1)).thenReturn(Optional.of(new City(1, "New York", "NY", "USA")));
-        boolean deleted = cityService.deleteCityByID(1);
-        assertThat(deleted).isTrue();
+        assertThat(cityService.deleteCityByID(1)).isTrue();
     }
-    
+
     @Test
     void testDeleteCityNotFound() {
         when(cityRepository.findById(1)).thenReturn(Optional.empty());
@@ -241,18 +146,88 @@ public class WeatherCitiesServiceTests {
     @Test
     void testDeleteCityByCityState() {
         when(cityRepository.deleteByCityAndState("New York", "NY")).thenReturn(1L);
-        boolean deleted = cityService.deleteCityByCityState("New York", "NY");
-        assertThat(deleted).isTrue();
+        assertThat(cityService.deleteCityByCityState("New York", "NY")).isTrue();
     }
-
 
     @Test
     void testDeleteCityByCityStateNotFound() {
         when(cityRepository.deleteByCityAndState("New York", "NY")).thenReturn(0L);
-        boolean deleted = cityService.deleteCityByCityState("New York", "NY");
-        assertThat(deleted).isFalse();
+        assertThat(cityService.deleteCityByCityState("New York", "NY")).isFalse();
     }
 
+    // --- SavedCity (join table) tests ---
+
+    @Test
+    void testGetSavedCitiesByUserId() {
+        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        user.setId(1L);
+        City city = new City(1, "New York", "NY", "USA");
+        when(savedCityRepository.findByUser_Id(1L)).thenReturn(List.of(new SavedCity(user, city)));
+        List<SavedCity> results = savedCityService.getSavedCitiesByUserId(1L);
+        assertThat(results).isNotEmpty();
+        assertThat(results.get(0).getUser().getUsername()).isEqualTo("John Doe");
+        assertThat(results.get(0).getCity().getCity()).isEqualTo("New York");
+    }
+
+    @Test
+    void testAddSavedCity() {
+        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        user.setId(1L);
+        City city = new City(1, "New York", "NY", "USA");
+        SavedCity savedCity = new SavedCity(user, city);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(cityRepository.findById(1)).thenReturn(Optional.of(city));
+        when(savedCityRepository.save(any(SavedCity.class))).thenReturn(savedCity);
+        SavedCity result = savedCityService.addSavedCity(1L, 1);
+        assertThat(result).isNotNull();
+        assertThat(result.getUser().getUsername()).isEqualTo("John Doe");
+        assertThat(result.getCity().getCity()).isEqualTo("New York");
+    }
+
+    @Test
+    void testAddSavedCityUserNotFound() {
+        when(userRepository.findById(1L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> savedCityService.addSavedCity(1L, 1)).isInstanceOf(UserNotFoundException.class);
+    }
+
+    @Test
+    void testAddSavedCityCityNotFound() {
+        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        user.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
+        when(cityRepository.findById(1)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> savedCityService.addSavedCity(1L, 1)).isInstanceOf(CityNotFoundException.class);
+    }
+
+    @Test
+    void testDeleteSavedCity() {
+        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        user.setId(1L);
+        City city = new City(1, "New York", "NY", "USA");
+        SavedCity savedCity = new SavedCity(user, city);
+        when(savedCityRepository.findById(1)).thenReturn(Optional.of(savedCity));
+        assertThat(savedCityService.deleteSavedCity(1)).isTrue();
+    }
+
+    @Test
+    void testDeleteSavedCityNotFound() {
+        when(savedCityRepository.findById(1)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> savedCityService.deleteSavedCity(1)).isInstanceOf(CityNotFoundException.class);
+    }
+
+    @Test
+    void testDeleteSavedCityByUserAndCity() {
+        when(savedCityRepository.deleteByUser_IdAndCity_Id(1L, 1)).thenReturn(1L);
+        assertThat(savedCityService.deleteSavedCityByUserAndCity(1L, 1)).isTrue();
+    }
+
+    @Test
+    void testDeleteSavedCityByUserAndCityNotFound() {
+        when(savedCityRepository.deleteByUser_IdAndCity_Id(1L, 1)).thenReturn(0L);
+        assertThat(savedCityService.deleteSavedCityByUserAndCity(1L, 1)).isFalse();
+    }
+
+    // --- User tests ---
 
     @Test
     void testFindAllUsers() {
@@ -342,50 +317,43 @@ public class WeatherCitiesServiceTests {
     @Test
     void testFindUsersByRoleNotFound() {
         when(userRepository.findByRole(Role.USER)).thenReturn(List.of());
-        List<User> users = userService.getUsersByRole(Role.USER);
-        assertThat(users).isEmpty();
+        assertThat(userService.getUsersByRole(Role.USER)).isEmpty();
     }
 
     @Test
     void testUserExistsByUsername() {
         when(userRepository.existsByUsername("John Doe")).thenReturn(true);
-        boolean exists = userService.userExistsByUsername("John Doe");
-        assertThat(exists).isTrue();
+        assertThat(userService.userExistsByUsername("John Doe")).isTrue();
     }
 
     @Test
     void testUserExistsByUsernameNotFound() {
         when(userRepository.existsByUsername("John Doe")).thenReturn(false);
-        boolean exists = userService.userExistsByUsername("John Doe");
-        assertThat(exists).isFalse();
+        assertThat(userService.userExistsByUsername("John Doe")).isFalse();
     }
 
     @Test
     void testUserExistsByEmail() {
         when(userRepository.existsByEmail("john.doe@example.com")).thenReturn(true);
-        boolean exists = userService.userExistsByEmail("john.doe@example.com");
-        assertThat(exists).isTrue();
+        assertThat(userService.userExistsByEmail("john.doe@example.com")).isTrue();
     }
 
     @Test
     void testUserExistsByEmailNotFound() {
         when(userRepository.existsByEmail("john.doe@example.com")).thenReturn(false);
-        boolean exists = userService.userExistsByEmail("john.doe@example.com");
-        assertThat(exists).isFalse();
+        assertThat(userService.userExistsByEmail("john.doe@example.com")).isFalse();
     }
 
     @Test
     void testUserExistsByUsernameAndPassword() {
         when(userRepository.existsByUsernameAndPassword("John Doe", "password")).thenReturn(true);
-        boolean exists = userService.userExistsByUsernameAndPassword("John Doe", "password");
-        assertThat(exists).isTrue();
+        assertThat(userService.userExistsByUsernameAndPassword("John Doe", "password")).isTrue();
     }
 
     @Test
     void testUserExistsByUsernameAndPasswordNotFound() {
         when(userRepository.existsByUsernameAndPassword("John Doe", "password")).thenReturn(false);
-        boolean exists = userService.userExistsByUsernameAndPassword("John Doe", "password");
-        assertThat(exists).isFalse();
+        assertThat(userService.userExistsByUsernameAndPassword("John Doe", "password")).isFalse();
     }
 
     @Test
@@ -417,7 +385,7 @@ public class WeatherCitiesServiceTests {
         updatedUser.setId(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
         when(userRepository.save(updatedUser)).thenReturn(updatedUser);
-        User updatedUserReturn = userService.updateUser(1L, updatedUser);
+        userService.updateUser(1L, updatedUser);
     }
 
     @Test
@@ -445,15 +413,13 @@ public class WeatherCitiesServiceTests {
     @Test
     void testDeleteUserByUsername() {
         when(userRepository.deleteByUsername("John Doe")).thenReturn(1L);
-        boolean deleted = userService.deleteUserByUsername("John Doe");
-        assertThat(deleted).isTrue();
+        assertThat(userService.deleteUserByUsername("John Doe")).isTrue();
     }
 
     @Test
     void testDeleteUserByUsernameNotFound() {
         when(userRepository.deleteByUsername("John Doe")).thenReturn(0L);
-        boolean deleted = userService.deleteUserByUsername("John Doe");
-        assertThat(deleted).isFalse();
+        assertThat(userService.deleteUserByUsername("John Doe")).isFalse();
     }
 
     @Test
