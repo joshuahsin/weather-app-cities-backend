@@ -6,7 +6,7 @@ This Weather App not only shows forecasts for different cities, it also provides
 ### Backend
 - A Java Springboot Backend that stores and manages the city and user data, as well as interacting with third party APIs such as Anthropic API for AI Generated itineraries, Geolocation to determin the user's city, and OpenWeather API to access current weather and forecasts for different cities.
 
-### Frontend
+### Frontend (https://github.com/joshuahsin/weather-app-frontend)
 - A React frontend complete with a login and registration flow, including options to reset password. User's can view their location's weather on the Home page, search for the forecasts of other locations through the search bar, and save and edit thier saved cities through the "Saved Cities" tab. They can also view nearby attractions on the Attractions tab, and generate a trip itinerary through the itinerary tab. Finally, they have the option to reset their password from the App Bar and logout.
 
 ## 🚀 Features
