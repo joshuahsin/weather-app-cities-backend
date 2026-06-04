@@ -3,6 +3,7 @@ package com.app.WeatherCities;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyList;
 import static org.mockito.Mockito.when;
 
 import java.util.List;
@@ -26,6 +27,7 @@ import com.repository.UserRepository;
 import com.service.CityDaoImpl;
 import com.service.SavedCityDaoImpl;
 import com.service.UserDaoImpl;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 @ExtendWith(MockitoExtension.class)
 public class WeatherCitiesServiceTests {
@@ -44,6 +46,9 @@ public class WeatherCitiesServiceTests {
 
     @Mock
     private UserRepository userRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @InjectMocks
     private UserDaoImpl userService;
@@ -346,20 +351,33 @@ public class WeatherCitiesServiceTests {
 
     @Test
     void testUserExistsByUsernameAndPassword() {
-        when(userRepository.existsByUsernameAndPassword("John Doe", "password")).thenReturn(true);
+        User user = new User("John Doe", "john.doe@example.com", "$2a$10$hash", Role.USER);
+        user.setId(1L);
+        when(userRepository.findByUsername("John Doe")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("password", "$2a$10$hash")).thenReturn(true);
         assertThat(userService.userExistsByUsernameAndPassword("John Doe", "password")).isTrue();
     }
 
     @Test
+    void testUserExistsByUsernameAndPasswordWrongPassword() {
+        User user = new User("John Doe", "john.doe@example.com", "$2a$10$hash", Role.USER);
+        user.setId(1L);
+        when(userRepository.findByUsername("John Doe")).thenReturn(Optional.of(user));
+        when(passwordEncoder.matches("wrongpassword", "$2a$10$hash")).thenReturn(false);
+        assertThat(userService.userExistsByUsernameAndPassword("John Doe", "wrongpassword")).isFalse();
+    }
+
+    @Test
     void testUserExistsByUsernameAndPasswordNotFound() {
-        when(userRepository.existsByUsernameAndPassword("John Doe", "password")).thenReturn(false);
+        when(userRepository.findByUsername("John Doe")).thenReturn(Optional.empty());
         assertThat(userService.userExistsByUsernameAndPassword("John Doe", "password")).isFalse();
     }
 
     @Test
     void testAddUser() {
         User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
-        when(userRepository.save(user)).thenReturn(user);
+        when(passwordEncoder.encode("password")).thenReturn("$2a$10$hash");
+        when(userRepository.save(any(User.class))).thenReturn(user);
         User addedUser = userService.addUser(user);
         assertThat(addedUser).isNotNull();
         assertThat(addedUser.getUsername()).isEqualTo("John Doe");
@@ -371,7 +389,8 @@ public class WeatherCitiesServiceTests {
     void testAddUserList() {
         List<User> users = List.of(new User("John Doe", "john.doe@example.com", "password", Role.USER),
                                     new User("Jane Doe", "jane.doe@example.com", "password", Role.USER));
-        when(userRepository.saveAll(users)).thenReturn(users);
+        when(passwordEncoder.encode(any())).thenReturn("$2a$10$hash");
+        when(userRepository.saveAll(anyList())).thenReturn(users);
         List<User> addedUsers = userService.addUserList(users);
         assertThat(addedUsers).isNotNull();
         assertThat(addedUsers.size()).isEqualTo(2);
@@ -379,13 +398,13 @@ public class WeatherCitiesServiceTests {
 
     @Test
     void testUpdateUser() {
-        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
-        user.setId(1L);
-        User updatedUser = new User("John Doe", "john.doe@example.com", "password", Role.USER);
-        updatedUser.setId(1L);
-        when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        when(userRepository.save(updatedUser)).thenReturn(updatedUser);
-        userService.updateUser(1L, updatedUser);
+        User existing = new User("John Doe", "john.doe@example.com", "$2a$10$hash", Role.USER);
+        existing.setId(1L);
+        User update = new User("Jane Doe", "jane.doe@example.com", "ignored", Role.USER);
+        update.setId(1L);
+        when(userRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(userRepository.save(any(User.class))).thenReturn(existing);
+        userService.updateUser(1L, update);
     }
 
     @Test
@@ -424,14 +443,14 @@ public class WeatherCitiesServiceTests {
 
     @Test
     void testUpdateUserPassword() {
-        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        User user = new User("John Doe", "john.doe@example.com", "$2a$10$oldhash", Role.USER);
         user.setId(1L);
         when(userRepository.findById(1L)).thenReturn(Optional.of(user));
-        user.setPassword("newpassword");
-        when(userRepository.save(user)).thenReturn(user);
+        when(passwordEncoder.encode("newpassword")).thenReturn("$2a$10$newhash");
+        when(userRepository.save(any(User.class))).thenReturn(user);
         User updatedUser = userService.updateUserPassword(1L, "newpassword");
         assertThat(updatedUser).isNotNull();
-        assertThat(updatedUser.getPassword()).isEqualTo("newpassword");
+        assertThat(updatedUser.getPassword()).isEqualTo("$2a$10$newhash");
     }
 
     @Test
@@ -442,14 +461,14 @@ public class WeatherCitiesServiceTests {
 
     @Test
     void testUpdateUserPasswordByUsername() {
-        User user = new User("John Doe", "john.doe@example.com", "password", Role.USER);
+        User user = new User("John Doe", "john.doe@example.com", "$2a$10$oldhash", Role.USER);
         user.setId(1L);
         when(userRepository.findByUsername("John Doe")).thenReturn(Optional.of(user));
-        user.setPassword("newpassword");
-        when(userRepository.save(user)).thenReturn(user);
+        when(passwordEncoder.encode("newpassword")).thenReturn("$2a$10$newhash");
+        when(userRepository.save(any(User.class))).thenReturn(user);
         User updatedUser = userService.updateUserPasswordByUsername("John Doe", "newpassword");
         assertThat(updatedUser).isNotNull();
-        assertThat(updatedUser.getPassword()).isEqualTo("newpassword");
+        assertThat(updatedUser.getPassword()).isEqualTo("$2a$10$newhash");
     }
 
     @Test

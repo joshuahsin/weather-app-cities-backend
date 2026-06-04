@@ -3,11 +3,13 @@ package com.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -17,6 +19,9 @@ import org.springframework.web.bind.annotation.RestController;
 import com.dao.CityDAO;
 import com.dao.SavedCityDAO;
 import com.dao.UserDAO;
+import com.dto.ChangePasswordRequest;
+import com.service.RegistrationService;
+import com.dto.LoginRequest;
 import com.entity.City;
 import com.entity.SavedCity;
 import com.entity.User;
@@ -102,6 +107,9 @@ public class AppController {
 	private UserDAO userDAO;
 
 	@Autowired
+	private RegistrationService registrationService;
+
+	@Autowired
 	private EmailService emailService;
 
 	@GetMapping("/AllUsers")
@@ -139,14 +147,19 @@ public class AppController {
 		return userDAO.userExistsByEmail(email);
 	}
 
-	@GetMapping("/login")
-	public boolean userExistsByUsernameAndPassword(@RequestParam String username, @RequestParam String password) {
-		return userDAO.userExistsByUsernameAndPassword(username, password);
+	@PostMapping("/login")
+	public boolean login(@RequestBody LoginRequest loginRequest) {
+		return userDAO.userExistsByUsernameAndPassword(loginRequest.getUsername(), loginRequest.getPassword());
 	}
 
 	@PostMapping("/register")
-	public User addUser(@RequestBody User user) {
-		return userDAO.addUser(user);
+	public String register(@Valid @RequestBody User user) {
+		return registrationService.initiateRegistration(user);
+	}
+
+	@PostMapping("/verifyEmail")
+	public User verifyEmail(@RequestParam String email, @RequestParam String code) {
+		return registrationService.completeRegistration(email, code);
 	}
 
 	@PostMapping("/addUserList")
@@ -157,6 +170,11 @@ public class AppController {
 	@PutMapping("/updateUser/{id}")
 	public User updateUser(@PathVariable Long id, @RequestBody User user) {
 		return userDAO.updateUser(id, user);
+	}
+
+	@PatchMapping("/changePassword/{id}")
+	public User changePassword(@PathVariable Long id, @RequestBody ChangePasswordRequest request) {
+		return userDAO.updateUserPassword(id, request.getNewPassword());
 	}
 
 	@DeleteMapping("/deleteUser/{id}")
@@ -182,12 +200,13 @@ public class AppController {
 		}
 	}
 
+	private static final java.security.SecureRandom SECURE_RANDOM = new java.security.SecureRandom();
+
 	private String generateTemporaryPassword() {
 		String chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
 		StringBuilder tempPassword = new StringBuilder();
-		java.util.Random random = new java.util.Random();
-		for (int i = 0; i < 8; i++) {
-			tempPassword.append(chars.charAt(random.nextInt(chars.length())));
+		for (int i = 0; i < 12; i++) {
+			tempPassword.append(chars.charAt(SECURE_RANDOM.nextInt(chars.length())));
 		}
 		return tempPassword.toString();
 	}

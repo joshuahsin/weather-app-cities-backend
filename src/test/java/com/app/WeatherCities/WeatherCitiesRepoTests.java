@@ -331,17 +331,6 @@ class WeatherCitiesRepoTests {
 	}
 
 	@Test
-	void testUserExistsByUsernameAndPassword() {
-		User user = new User();
-		user.setUsername("John Doe");
-		user.setEmail("john.doe@example.com");
-		user.setPassword("password");
-		user.setRole(Role.USER);
-		userRepository.save(user);
-		assertThat(userRepository.existsByUsernameAndPassword("John Doe", "password")).isTrue();
-	}
-
-	@Test
 	void testDeleteUserByUsername() {
 		User user = new User();
 		user.setUsername("John Doe");
