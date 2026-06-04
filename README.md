@@ -19,25 +19,92 @@ This Weather App not only shows forecasts for different cities, it also provides
 
 ## 🌐 API Endpoints
 
-### Health Check
-- `GET /health` - Server status and configuration
+### Users API (`weatherCities`) - Authentication and Registration
+- `POST /weatherCities/register`	- Initiate registration — sends 6-digit code to email (valid 15 min)
+- `POST	/weatherCities/verifyEmail?email={email}&code={code}` - Verify code and create account
+- `POST	/weatherCities/login` - Authenticate — returns true/false
+- `POST	/weatherCities/forgotPassword?email={email}` - Send 12-character temporary password to email
+- `PATCH /weatherCities/changePassword/{id}`	Change password
 
-### Weather API (`/api/weather`)
-- `GET /api/weather/current?lat={lat}&lon={lon}` - Current weather for location
-- `GET /api/weather/forecast?lat={lat}&lon={lon}` - 5-day weather forecast
-- `POST /api/weather/batch` - Weather data for multiple locations
+## Cities API (`weatherCities`)
+- `GET /weatherCities/cities`	- Get all cities
+- `GET /weatherCities/city/{id}` -	Get city by ID
+- `GET /weatherCities/cityExists?city={city}&state={state}` - Check if a city/state exists in the catalog
+- `POST	/weatherCities/city` - Add a city
+- `POST	/weatherCities/cities` - Bulk add cities
+- `PUT /weatherCities/city/{id}` - Update a city
+- `DELETE	/weatherCities/city/{id}`	- Delete city by ID
+- `DELETE	/weatherCities/cityByCityState?city={city}&state={state}` -	Delete by city and state
 
-### AI API (`/api/ai`)
-- `POST /api/ai/generate` - General AI content generation
-- `POST /api/ai/itinerary` - AI-powered travel itinerary generation
-- `POST /api/ai/recommendations` - Weather-appropriate activity recommendations
-- `GET /api/ai/health` - AI service status
+### Saved Cities API (`weatherCities`)
+- `GET /weatherCities/savedCities/{userId}` - Get all saved cities for a user
+- `POST	/weatherCities/savedCity?userId={userId}&cityId={cityId}` -	Save a catalog city for a user
+- `DELETE	/weatherCities/savedCity/{id}` - Remove saved city by record ID
+- `DELETE	/weatherCities/savedCityByUserAndCity?userId={userId}&cityId={cityId}` - Remove by user + city pair
+
+### Weather API (`/weatherCities/weather`)
+- `GET /weatherCities/weather/health` - Server status and configuration
+- `GET /weatherCities/weather/current?lat={lat}&lon={lon}` - Current weather by coordinates
+- `GET /weatherCities/weather/current?currentByCityState?city={city}&state={state}&country={country}` - Current weather by city
+- `GET /weatherCities/weather/forecast?lat={lat}&lon={lon}`	- 5-day forecast by coordinates
+- `GET /weatherCities/weather/forecastByCityState?city={city}&state={state}&country={country}` - 5-day forecast by city
+
+### Geolocation API (`/weatherCities/geolocation`)
+- `GET /weatherCities/geolocation/locate?lat={lat}&lon={lon}` - Reverse geocode coordinates to city/state/country
+
+### AI API (`/weatherCities/ai`)
+- `POST /weatherCities/ai/itinerary` - AI-powered travel itinerary generation
+- `POST /weatherCities/ai/recommendations` - Weather-appropriate activity recommendations
 
 ## 📡 API Usage Examples
 
+### Login
+```bash
+curl -X POST "http://localhost:8080/weatherCities/login" \
+  -H "Content-Type: application/json" \
+  -d '{"username": "john", "password": "secret123"}'
+```
+
+### Get all cities
+```bash
+curl "http://localhost:8080/weatherCities/cities"
+```
+
+### Add a city
+```bash
+curl -X POST "http://localhost:8080/weatherCities/city" \
+  -H "Content-Type: application/json" \
+  -d '{"city": "Austin", "state": "TX", "country": "USA"}'
+```
+
+### Check Existence of City in DB
+```bash
+curl "http://localhost:8080/weatherCities/cityExists?city=Austin&state=TX"
+```
+
+### Get saved cities for user 1
+```bash
+curl "http://localhost:8080/weatherCities/savedCities/1"
+```
+
+### Save City ID 42 for user 1
+```bash
+curl -X POST "http://localhost:8080/weatherCities/savedCity?userId=1&cityId=42"
+```
+
+### Remove Saved City by User + City
+```bash
+curl -X DELETE "http://localhost:8080/weatherCities/savedCityByUserAndCity?userId=1&cityId=42"
+```
+  
 ### Get Current Weather
 ```bash
 curl "http://localhost:3001/api/weather/current?lat=40.7128&lon=-74.0060"
+```
+
+### 5-day forecast
+```bash
+curl "http://localhost:8080/weatherCities/weather/forecast?lat=40.7128&lon=-74.0060"
 ```
 
 ### Generate Travel Itinerary
@@ -51,18 +118,6 @@ curl -X POST "http://localhost:3001/api/ai/itinerary" \
       "weather": {"temperature": 75, "description": "sunny"},
       "currentTime": "2024-01-15T10:00:00Z"
     }
-  }'
-```
-
-### Batch Weather Request
-```bash
-curl -X POST "http://localhost:3001/api/weather/batch" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "locations": [
-      {"lat": 40.7128, "lng": -74.0060, "name": "New York"},
-      {"lat": 34.0522, "lng": -118.2437, "name": "Los Angeles"}
-    ]
   }'
 ```
 
